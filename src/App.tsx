@@ -15,7 +15,16 @@ function App() {
 
       <footer className="flex flex-col mt-20 text-xs">
         <p>Double-click to edit a todo</p>
-        <p>Clone TodoMVC</p>
+        <p>
+          Clone
+          <a
+            href="https://todomvc.com/examples/react/dist/"
+            target="_blank"
+            className="ml-1 hover:underline"
+          >
+            TodoMVC
+          </a>
+        </p>
       </footer>
     </div>
   );
