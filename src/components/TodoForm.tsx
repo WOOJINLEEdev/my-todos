@@ -13,25 +13,30 @@ interface FormData {
 const FILTERS = ["all", "active", "completed"];
 
 const TodoForm = () => {
-  const ulRef = useRef<HTMLUListElement>(null);
   const editRef = useRef<HTMLInputElement>(null);
+  const todoListRef = useRef<HTMLUListElement>(null);
   const filtersRef = useRef<HTMLUListElement>(null);
 
+  const [index, setIndex] = useState<number | null>(null);
   const [isSelected, setIsSelected] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
-  const [index, setIndex] = useState<number | null>(null);
   const [isFilterClicked, setIsFilterClicked] = useState(false);
   const [clickedFilter, setClickedFilter] = useState("all");
 
   const { todoList, count, setCount, setTodoList, addTodoItem } =
     useTodoListStore();
 
-  const { register, handleSubmit, resetField } = useForm<FormData>({
+  const { register, handleSubmit, setFocus, resetField } = useForm<FormData>({
     defaultValues: {
       todo: "",
     },
   });
+
+  useEffect(() => {
+    setFocus("todo");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     function handleOutsideClick(e: MouseEvent): void {
@@ -42,14 +47,17 @@ const TodoForm = () => {
         setIsFilterClicked(false);
       }
 
-      if (ulRef.current?.contains(e.target as Node)) {
+      if (todoListRef.current?.contains(e.target as Node)) {
         if (editRef && e.target !== editRef.current) {
           setIsSelected(false);
           setIndex(null);
         }
       }
 
-      if (ulRef.current && !ulRef.current.contains(e.target as Node)) {
+      if (
+        todoListRef.current &&
+        !todoListRef.current.contains(e.target as Node)
+      ) {
         setIsSelected(false);
         setIndex(null);
       }
@@ -59,7 +67,7 @@ const TodoForm = () => {
     return () => {
       document.removeEventListener("click", handleOutsideClick);
     };
-  }, [ulRef]);
+  }, [todoListRef]);
 
   useEffect(() => {
     if ((index && editRef) || index === 0) {
@@ -88,7 +96,7 @@ const TodoForm = () => {
     setIsSelected(false);
   };
 
-  const handleKeyDown = (e: KeyboardEvent, id: string) => {
+  const handleInputKeyDown = (e: KeyboardEvent, id: string) => {
     if (e.key === "Enter") {
       if (editText.trim().length < 2) {
         return;
@@ -157,7 +165,7 @@ const TodoForm = () => {
     setTodoList(filteredTodoList);
   };
 
-  function getTodoCount() {
+  function getActiveTodoCount() {
     return todoList.filter((todo) => !todo.completed).length;
   }
 
@@ -240,7 +248,10 @@ const TodoForm = () => {
           })}
         />
 
-        <ul className={`${todoList.length > 0 ? "mt-1" : ""}`} ref={ulRef}>
+        <ul
+          className={`${todoList.length > 0 ? "mt-1" : ""}`}
+          ref={todoListRef}
+        >
           {filterFields(todoList)?.map((todo, i) => {
             return (
               <li
@@ -258,7 +269,7 @@ const TodoForm = () => {
                       className="w-full p-4 pl-[60px] text-2xl"
                       defaultValue={todo.todo}
                       ref={i === index ? editRef : undefined}
-                      onKeyDown={(e) => handleKeyDown(e, todo.id)}
+                      onKeyDown={(e) => handleInputKeyDown(e, todo.id)}
                       onChange={(e) => handleInputChange(e)}
                       onBlur={handleInputBlur}
                     />
@@ -308,7 +319,7 @@ const TodoForm = () => {
 
         {(isFilterClicked || todoList.length > 0) && (
           <div className="flex justify-between min-h-5 px-4 py-2.5 border border-t-0 border-solid border-gray-200">
-            <span>{getTodoCount()} item left!</span>
+            <span>{getActiveTodoCount()} item left!</span>
 
             <ul className="flex gap-1" ref={filtersRef}>
               {FILTERS.map((filter, i) => {
