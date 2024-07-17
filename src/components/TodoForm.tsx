@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 
 import { capitalizeFirstLetter } from "@/utils/common";
 
-import useTodoListStore, { Todo } from "@/state/useTodoListStore";
+import useTodosStore, { Todo } from "@/state/useTodosStore";
 
 interface FormData {
   todo: string;
@@ -14,7 +14,7 @@ const FILTERS = ["all", "active", "completed"];
 
 const TodoForm = () => {
   const editRef = useRef<HTMLInputElement>(null);
-  const todoListRef = useRef<HTMLUListElement>(null);
+  const todosRef = useRef<HTMLUListElement>(null);
   const filtersRef = useRef<HTMLUListElement>(null);
 
   const [index, setIndex] = useState<number | null>(null);
@@ -24,8 +24,7 @@ const TodoForm = () => {
   const [isFilterClicked, setIsFilterClicked] = useState(false);
   const [clickedFilter, setClickedFilter] = useState("all");
 
-  const { todoList, count, setCount, setTodoList, addTodoItem } =
-    useTodoListStore();
+  const { todos, count, setCount, setTodos, addTodoItem } = useTodosStore();
 
   const { register, handleSubmit, setFocus, resetField } = useForm<FormData>({
     defaultValues: {
@@ -39,7 +38,7 @@ const TodoForm = () => {
   }, []);
 
   useEffect(() => {
-    function handleOutsideClick(e: MouseEvent): void {
+    const handleOutsideClick = (e: MouseEvent): void => {
       if (
         filtersRef.current &&
         !filtersRef.current.contains(e.target as Node)
@@ -47,27 +46,24 @@ const TodoForm = () => {
         setIsFilterClicked(false);
       }
 
-      if (todoListRef.current?.contains(e.target as Node)) {
+      if (todosRef.current?.contains(e.target as Node)) {
         if (editRef && e.target !== editRef.current) {
           setIsSelected(false);
           setIndex(null);
         }
       }
 
-      if (
-        todoListRef.current &&
-        !todoListRef.current.contains(e.target as Node)
-      ) {
+      if (todosRef.current && !todosRef.current.contains(e.target as Node)) {
         setIsSelected(false);
         setIndex(null);
       }
-    }
+    };
 
     document.addEventListener("click", handleOutsideClick);
     return () => {
       document.removeEventListener("click", handleOutsideClick);
     };
-  }, [todoListRef]);
+  }, [todosRef]);
 
   useEffect(() => {
     if ((index && editRef) || index === 0) {
@@ -103,7 +99,7 @@ const TodoForm = () => {
       }
 
       setIsSelected(false);
-      const findTodoItem = todoList.find((item) => item.id === id);
+      const findTodoItem = todos.find((item) => item.id === id);
       if (findTodoItem) {
         findTodoItem.todo = editText;
       }
@@ -115,7 +111,7 @@ const TodoForm = () => {
   };
 
   const handleAllCheckChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const clone: Todo[] = JSON.parse(JSON.stringify(todoList));
+    const clone: Todo[] = JSON.parse(JSON.stringify(todos));
     if (e.currentTarget.checked) {
       const allCompletedFields = clone.map((item) => {
         return {
@@ -123,7 +119,7 @@ const TodoForm = () => {
           completed: true,
         };
       });
-      setTodoList(allCompletedFields);
+      setTodos(allCompletedFields);
     } else {
       const notCompletedFields = clone.map((item) => {
         return {
@@ -131,7 +127,7 @@ const TodoForm = () => {
           completed: false,
         };
       });
-      setTodoList(notCompletedFields);
+      setTodos(notCompletedFields);
     }
   };
 
@@ -139,37 +135,37 @@ const TodoForm = () => {
     e: ChangeEvent<HTMLInputElement>,
     id: string
   ) => {
-    const clone: Todo[] = JSON.parse(JSON.stringify(todoList));
+    const clone: Todo[] = JSON.parse(JSON.stringify(todos));
     const findTodoItem = clone.find((item) => item.id === id);
     if (findTodoItem) {
       findTodoItem.completed = e.currentTarget.checked;
     }
 
-    setTodoList(clone);
+    setTodos(clone);
   };
 
   const handleTodoItemDelete = (id: string) => {
-    const filteredTodoList = todoList.filter((todoItem) => todoItem.id !== id);
-    setTodoList(filteredTodoList);
+    const filteredtodos = todos.filter((todoItem) => todoItem.id !== id);
+    setTodos(filteredtodos);
   };
 
   const handleCompletedTodoClear = () => {
-    const filteredTodoList = todoList.filter((item) => !item.completed);
+    const filteredtodos = todos.filter((item) => !item.completed);
 
-    if (filteredTodoList.length === 0) {
-      setTodoList([]);
+    if (filteredtodos.length === 0) {
+      setTodos([]);
       setClickedFilter("all");
       return;
     }
 
-    setTodoList(filteredTodoList);
+    setTodos(filteredtodos);
   };
 
-  function getActiveTodoCount() {
-    return todoList.filter((todo) => !todo.completed).length;
-  }
+  const getActiveTodoCount = () => {
+    return todos.filter((todo) => !todo.completed).length;
+  };
 
-  function filterFields(fields: Todo[]) {
+  const filterFields = (fields: Todo[]) => {
     if (fields && fields.length > 0) {
       switch (clickedFilter) {
         case "all":
@@ -182,35 +178,35 @@ const TodoForm = () => {
           return fields;
       }
     }
-  }
+  };
 
-  function showAllCheckbox() {
+  const showAllCheckbox = () => {
     if (
       clickedFilter === "active" &&
-      todoList.filter((todo) => !todo.completed).length === 0
+      todos.filter((todo) => !todo.completed).length === 0
     ) {
       return false;
     }
 
     if (
       clickedFilter === "completed" &&
-      todoList.filter((todo) => todo.completed).length === 0
+      todos.filter((todo) => todo.completed).length === 0
     ) {
       return false;
     }
 
-    if (todoList && todoList.length > 0) {
+    if (todos && todos.length > 0) {
       return true;
     }
-  }
+  };
 
-  function checkAllCheckbox() {
+  const checkAllCheckbox = () => {
     if (clickedFilter === "completed") {
       return true;
     }
 
-    return todoList.every((todo) => todo.completed);
-  }
+    return todos.every((todo) => todo.completed);
+  };
 
   return (
     <div className="flex flex-col">
@@ -248,11 +244,8 @@ const TodoForm = () => {
           })}
         />
 
-        <ul
-          className={`${todoList.length > 0 ? "mt-1" : ""}`}
-          ref={todoListRef}
-        >
-          {filterFields(todoList)?.map((todo, i) => {
+        <ul className={`${todos.length > 0 ? "mt-1" : ""}`} ref={todosRef}>
+          {filterFields(todos)?.map((todo, i) => {
             return (
               <li
                 key={todo.id}
@@ -317,7 +310,7 @@ const TodoForm = () => {
           })}
         </ul>
 
-        {(isFilterClicked || todoList.length > 0) && (
+        {(isFilterClicked || todos.length > 0) && (
           <div className="flex justify-between min-h-5 px-4 py-2.5 border border-t-0 border-solid border-gray-200">
             <span>{getActiveTodoCount()} item left!</span>
 

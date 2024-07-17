@@ -6,28 +6,28 @@ export interface Todo {
   completed: boolean;
 }
 
-interface UseTodoListStoreProps {
-  todoList: Todo[];
+interface UseTodosStoreProps {
+  todos: Todo[];
   count: number;
   addTodoItem: (todoItem: Todo) => void;
-  setTodoList: (todos: Todo[]) => void;
+  setTodos: (todos: Todo[]) => void;
   setCount: () => void;
 }
 
-const useTodoListStore = create<UseTodoListStoreProps>()((set) => ({
-  todoList: [],
+const useTodosStore = create<UseTodosStoreProps>()((set) => ({
+  todos: [],
   count: 0,
 
   addTodoItem: (todoItem) => {
     set((state) => ({
       ...state,
-      todoList: [...state.todoList, todoItem],
+      todos: [...state.todos, todoItem],
     }));
   },
-  setTodoList: (todos) => {
+  setTodos: (todos) => {
     set((state) => ({
       ...state,
-      todoList: todos,
+      todos: todos,
     }));
   },
   setCount: () => {
@@ -38,4 +38,4 @@ const useTodoListStore = create<UseTodoListStoreProps>()((set) => ({
   },
 }));
 
-export default useTodoListStore;
+export default useTodosStore;
